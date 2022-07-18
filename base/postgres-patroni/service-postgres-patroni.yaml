@@ -1,0 +1,13 @@
+﻿kind: Service
+apiVersion: v1
+metadata:
+  name: postgres-patroni
+spec:
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+  selector:
+    application: postgres-patroni
+  type: ClusterIP
+  sessionAffinity: None

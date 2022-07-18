@@ -1,0 +1,10 @@
+﻿kind: ConfigMap
+apiVersion: v1
+metadata:
+  annotations:
+    leader: postgres-patroni-0
+    optime: '83886400'
+    transitions: '0'
+    ttl: '30'
+  name: postgres-patroni-leader
+

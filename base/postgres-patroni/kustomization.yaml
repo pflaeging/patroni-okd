@@ -1,0 +1,36 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- configmap-postgres-patroni-config.yaml
+- configmap-postgres-patroni-leader.yaml
+- role-postgres-patroni.yaml
+- rolebinding-postgres-patroni.yaml
+- service-postgres-patroni-master.yaml
+- service-postgres-patroni-replica.yaml
+- service-postgres-patroni.yaml
+- serviceaccount-postgres-patroni.yaml
+- statefulset-postgres-patroni.yaml
+
+commonLabels:
+  app.kubernetes.io/component: postgres-patroni
+
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+vars:
+- name: POSTGRESQL_SERVICE_HOST
+  objref:
+    kind: Service
+    name: postgres-patroni
+    apiVersion: v1
+  fieldref:
+    fieldpath: metadata.name
+- name: CLUSTER_NAME
+  objref:
+    kind: Service
+    name: postgres-patroni
+    apiVersion: v1
+  fieldref:
+    fieldpath: metadata.labels.cluster-name

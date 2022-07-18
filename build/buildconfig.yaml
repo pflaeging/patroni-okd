@@ -1,0 +1,25 @@
+﻿kind: BuildConfig
+apiVersion: build.openshift.io/v1
+metadata:
+  name: postgres-patroni
+  labels:
+    build: postgres-patroni
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: 'postgres-patroni:latest'
+  resources: {}
+  successfulBuildsHistoryLimit: 5
+  failedBuildsHistoryLimit: 5
+  strategy:
+    type: Docker
+  postCommit: {}
+  source:
+    type: Git
+    git:
+      uri: 'https://github.com/zalando/patroni'
+    contextDir: kubernetes
+  triggers:
+    - type: ConfigChange
+  runPolicy: Serial

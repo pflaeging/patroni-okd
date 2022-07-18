@@ -1,0 +1,131 @@
+﻿kind: StatefulSet
+apiVersion: apps/v1
+metadata:
+  name: postgres-patroni
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      application: postgres-patroni
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        application: postgres-patroni
+    spec:
+      restartPolicy: Always
+      initContainers:
+        - name: fix-perms
+          image: quay.io/pflaeging/postgres-patroni:latest
+          command:
+            - sh
+            - '-c'
+            - >-
+              mkdir -p /home/postgres/pgdata/pgroot/data && chmod 0700
+              /home/postgres/pgdata/pgroot/data
+          resources: {}
+          volumeMounts:
+            - name: postgres-patroni
+              mountPath: /home/postgres/pgdata
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: IfNotPresent
+      serviceAccountName: postgres-patroni
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 0
+      securityContext: {}
+      containers:
+        - resources: {}
+          readinessProbe:
+            httpGet:
+              path: /readiness
+              port: 8008
+              scheme: HTTP
+            initialDelaySeconds: 3
+            timeoutSeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          terminationMessagePath: /dev/termination-log
+          name: postgres-patroni
+          env:
+            - name: PATRONI_KUBERNETES_POD_IP
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.podIP
+            - name: PATRONI_KUBERNETES_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+            - name: PATRONI_KUBERNETES_BYPASS_API_SERVICE
+              value: 'false'
+            - name: PATRONI_KUBERNETES_USE_ENDPOINTS
+              value: 'false'
+            - name: PATRONI_KUBERNETES_LABELS
+              value: >-
+                {application: postgres-patroni, cluster-name: $(CLUSTER_NAME)}
+            - name: PATRONI_SUPERUSER_USERNAME
+              value: postgres
+            - name: PATRONI_SUPERUSER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-patroni
+                  key: superuser-password
+            - name: PATRONI_REPLICATION_USERNAME
+              value: standby
+            - name: PATRONI_REPLICATION_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-patroni
+                  key: replication-password
+            - name: PATRONI_SCOPE
+              value: $(CLUSTER_NAME)
+            - name: PATRONI_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+            - name: PATRONI_POSTGRESQL_DATA_DIR
+              value: /home/postgres/pgdata/pgroot/data
+            - name: PATRONI_POSTGRESQL_PGPASS
+              value: /tmp/pgpass
+            - name: PATRONI_POSTGRESQL_LISTEN
+              value: '0.0.0.0:5432'
+            - name: PATRONI_RESTAPI_LISTEN
+              value: '0.0.0.0:8008'
+          ports:
+            - containerPort: 8008
+              protocol: TCP
+            - containerPort: 5432
+              protocol: TCP
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: postgres-patroni
+              mountPath: /home/postgres/pgdata
+          terminationMessagePolicy: File
+          image: quay.io/pflaeging/postgres-patroni:latest
+      serviceAccount: postgres-patroni
+      volumes:
+        - name: postgres-patroni
+          persistentVolumeClaim:
+            claimName: postgres-patroni
+      dnsPolicy: ClusterFirst
+  volumeClaimTemplates:
+  - kind: PersistentVolumeClaim
+    apiVersion: v1
+    metadata:
+      name: postgres-patroni
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      volumeMode: Filesystem
+  serviceName: postgres-patroni
+  podManagementPolicy: OrderedReady
+  updateStrategy:
+    type: OnDelete
+  revisionHistoryLimit: 10
