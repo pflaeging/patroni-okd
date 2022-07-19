@@ -10,5 +10,9 @@ For your convinience you get a kustomize variable `POSTGRESQL_SERVICE_HOST` with
 
 Build the container via `oc apply -k build`. You've got an ImageStream `postgres-patroni:latest` after the build!
 
+## Comments
+
+- The 2 ConfigMaps are holding the actual leader in an annotation and the other the config also in an annotation!
+
 ---
 Peter Pfläging <peter@pflaeging.net>
