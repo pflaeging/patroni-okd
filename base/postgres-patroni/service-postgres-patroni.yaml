@@ -9,5 +9,6 @@ spec:
       targetPort: 5432
   selector:
     application: postgres-patroni
+    role: master
   type: ClusterIP
   sessionAffinity: None
