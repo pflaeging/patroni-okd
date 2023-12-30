@@ -35,6 +35,9 @@ secretGenerator:
   - name: postgres-patroni
     envs:
     - passwords.env
+  - name: postgres
+    envs:
+    - postgres.env
 
 generatorOptions:
   disableNameSuffixHash: true
@@ -42,4 +45,4 @@ generatorOptions:
 images:
   - name: quay.io/pflaeging/postgres-patroni:latest
     newName: image-registry.openshift-image-registry.svc:5000/demo-fh/postgres-patroni
-    newTag: latest
+    newTag: "0.5"

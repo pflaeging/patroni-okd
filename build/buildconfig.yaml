@@ -18,7 +18,7 @@ spec:
   source:
     type: Git
     git:
-      uri: 'https://github.com/zalando/patroni'
+      uri: 'https://github.com/pflaeging/patroni'
     contextDir: kubernetes
   triggers:
     - type: ConfigChange
